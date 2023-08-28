@@ -1,120 +1,123 @@
 <?php
-//Verificação para ver se o método de solicitação HTTP é POST
 if ($_SERVER["REQUEST_METHOD"] === "POST") 
 {
-    //Obter o número de grandes prêmios $G e número de pilotos $P
-    $G = isset($_POST["G"]) ? intval($_POST["G"]) : 0;
-    $P = isset($_POST["P"]) ? intval($_POST["P"]) : 0;
+    $numGP = isset($_POST["num_gp"]) ? intval($_POST["num_gp"]) : 0;
+    $numPilotos = isset($_POST["num_pilotos"]) ? intval($_POST["num_pilotos"]) : 0;
 
-    $pontuacao_atual = array_fill(1, $P, 0);
-    $S = isset($_POST["S"]) ? intval($_POST["S"]) : 0;
-    $campeoes = array();
-
-    for ($i = 0; $i < $G; $i++) 
+    // Processar os resultados das corridas
+    for ($i = 1; $i <= $numGP; $i++) 
     {
-        $ordem_chegada = isset($_POST["corrida$i"]) ? $_POST["corrida$i"] : array();
-        for ($j = 0; $j < $P; $j++) 
+        echo "<h2>Resultados da Corrida $i:</h2>";
+        for ($j = 1; $j <= $numPilotos; $j++) 
         {
-            $piloto = isset($ordem_chegada[$j]) ? intval($ordem_chegada[$j]) : 0;
-            $pontuacao_atual[$piloto] += $j;
+            $campoNome = "corrida_$i\_piloto_$j";
+            if (isset($_POST[$campoNome])) 
+            {
+                $resultado = intval($_POST[$campoNome]);
+                echo "Na Corrida $i, o Piloto $j chegou na posição $resultado.<br>";
+                // Aqui você pode processar os resultados, como armazenar em um banco de dados.
+            }
         }
     }
 
-    for ($sistema = 0; $sistema < $S; $sistema++) 
+    $numSistemas = isset($_POST["num_sistemas"]) ? intval($_POST["num_sistemas"]) : 0;
+
+    // Processar os sistemas de pontuação
+    for ($sistema = 1; $sistema <= $numSistemas; $sistema++) 
     {
-        $K = isset($_POST["K$sistema"]) ? intval($_POST["K$sistema"]) : 0;
-        $pontos = isset($_POST["pontos$sistema"]) ? $_POST["pontos$sistema"] : array();
-        for ($j = 0; $j < $K; $j++) 
+        echo "<h2>Sistema de Pontuação $sistema:</h2>";
+        $ultimoColocado = isset($POST["ultimo_colocado$sistema"]) ? intval($POST["ultimo_colocado$sistema"]) : 1;
+        $pontos = array();
+        for ($posicao = 1; $posicao <= $numPilotos; $posicao++) 
         {
-            $pontos[] = intval($_POST["pontos$sistema$j"]);
+            $campoPontos = "pontos_$sistema\_$posicao";
+            $pontos[$posicao] = isset($_POST[$campoPontos]) ? intval($_POST[$campoPontos]) : 0;
         }
 
-        $pontuacao_total = array();
-        for ($piloto = 1; $piloto <= $P; $piloto++) 
+        // Aqui você pode calcular a pontuação para cada piloto com base no sistema de pontuação.
+        // Implemente a lógica apropriada para calcular os pontos.
+        // Exemplo de cálculo de pontos:
+        $pontuacao = array();
+        for ($posicao = 1; $posicao <= $numPilotos; $posicao++) 
         {
-            $pontuacao_total[$piloto] = $pontuacao_atual[$piloto];
+            $pontuacao[$posicao] = $pontos[$posicao];
         }
 
-        arsort($pontuacao_total);
-
-        $max_pontos = reset($pontuacao_total);
-        $campeao = key($pontuacao_total);
-
-        if ($pontuacao_total[$campeao] == end($pontuacao_total)) 
+        // Exibir pontuações calculadas
+        for ($posicao = 1; $posicao <= $numPilotos; $posicao++) 
         {
-            $campeoes[] = $campeao;
+            echo "Piloto $posicao: Pontuação = " . $pontuacao[$posicao] . "<br>";
         }
     }
 }
-
 ?>
 
 <!DOCTYPE html>
-<html lang="pt">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Campeão Mundial de Pilotos</title>
+    <title>Formulário de Resultados de Corrida</title>
 </head>
 <body>
-    <h1>Campeão Mundial de Pilotos</h1>
-    <form method="post">
-        <label for="G">Número de Grandes Prêmios:</label>
-        <input type="number" name="G" id="G" required>
-        <br>
-        <label for="P">Número de Pilotos:</label>
-        <input type="number" name="P" id="P" required>
-        <br>
+    <h1>Informe os Resultados das Corridas</h1>
+    <form method="post" action="fake-natty.php">
+        <label for="num_gp">Número de Grandes Prêmios (G):</label>
+        <input type="number" id="num_gp" name="num_gp" min="1" max="100" required>
+        <br><br>
+
+        <label for="num_pilotos">Número de Pilotos (P):</label>
+        <input type="number" id="num_pilotos" name="num_pilotos" min="1" max="100" required>
+        <br><br>
 
         <?php
-        for ($i = 0; $i < $G; $i++) 
+        // Gerar campos de entrada dinamicamente para os resultados das corridas
+        if (isset($_POST["num_gp"]) && isset($_POST["num_pilotos"])) 
         {
-            echo "<h2>Resultado da Corrida " . ($i + 1) . "</h2>";
-            for ($j = 1; $j <= $P; $j++) 
+            $numGP = $_POST["num_gp"];
+            $numPilotos = $_POST["num_pilotos"];
+
+            for ($i = 1; $i <= $numGP; $i++) 
             {
-                echo "Posição do Piloto " . $j . ": ";
-                echo "<input type='number' name='corrida$i" . "[]' required>";
-                echo "<br>";
+                echo "<h2>Resultados da Corrida $i:</h2>";
+                for ($j = 1; $j <= $numPilotos; $j++) 
+                {
+                    echo "<label for='corrida_$i\_piloto_$j'>Piloto $j:</label>";
+                    echo "<input type='number' id='corrida_$i\_piloto_$j' name='corrida_$i\_piloto_$j' required>";
+                    echo "<br>";
+                }
             }
         }
         ?>
 
-        <label for="S">Número de Sistemas de Pontuação:</label>
-        <input type="number" name="S" id="S" required>
-        <br>
+        <h1>Defina os Sistemas de Pontuação</h1>
+
+        <label for="num_sistemas">Número de Sistemas de Pontuação (S):</label>
+        <input type="number" id="num_sistemas" name="num_sistemas" min="1" max="10" required>
+        <br><br>
 
         <?php
-        for ($sistema = 0; $sistema < $S; $sistema++) 
+        // Gerar campos de entrada dinamicamente para os sistemas de pontuação
+        if (isset($_POST["num_sistemas"])) 
         {
-            echo "<h2>Sistema de Pontuação " . ($sistema + 1) . "</h2>";
-            echo "Último piloto que recebe pontos: ";
-            echo "<input type='number' name='K$sistema' required>";
-            echo "<br>";
+            $numSistemas = $_POST["num_sistemas"];
 
-            for ($j = 1; $j <= $K; $j++) 
+            for ($sistema = 1; $sistema <= $numSistemas; $sistema++) 
             {
-                echo "Pontos para o Piloto " . $j . ": ";
-                echo "<input type='number' name='pontos$sistema" . "[]' required>";
+                echo "<h2>Sistema de Pontuação $sistema:</h2>";
+                echo "<label for='ultimo_colocado_$sistema'>Último Colocado:</label>";
+                echo "<input type='number' id='ultimo_colocado_$sistema' name='ultimo_colocado_$sistema' min='1' max='$numPilotos' required>";
                 echo "<br>";
+
+                echo "<label for='pontos_$sistema'>Pontos:</label>";
+                for ($posicao = 1; $posicao <= $numPilotos; $posicao++) 
+                {
+                    echo "<input type='number' id='pontos_$sistema\_$posicao' name='pontos_$sistema\_$posicao' required>";
+                }
+                echo "<br><br>";
             }
         }
         ?>
 
-        <input type="submit" value="Calcular Campeão">
+        <input type="submit" value="Calcular Pontuações">
     </form>
-
-    <?php
-    if ($_SERVER["REQUEST_METHOD"] === "POST") 
-    {
-        if (count($campeoes) === 1) 
-        {
-            echo "<h2>Campeão Mundial de Pilotos:</h2>";
-        } else 
-        {
-            echo "<h2>Campeões Mundiais de Pilotos:</h2>";
-        }
-        echo implode(" ", $campeoes);
-    }
-    ?>
 </body>
 </html>
